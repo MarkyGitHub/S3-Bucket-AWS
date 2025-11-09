@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: s3-sync-backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/s3sync
+    username: postgres
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+aws:
+  s3:
+    bucket-name: s3-sync-poc
+    region: eu-central-1
+    endpoint: http://localhost:4566
+
+sync:
+  schedule-cron: "0 0 */3 * * *"
+  scheduler-enabled: true
