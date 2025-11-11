@@ -148,5 +148,3 @@ class S3StorageServiceTest {
         assertThat(events.get(2).getFormattedMessage()).contains("attempt 3/3");
     }
 }
-
-

@@ -33,7 +33,6 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:localstack")
-    testImplementation("org.mockito:mockito-inline:5.10.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

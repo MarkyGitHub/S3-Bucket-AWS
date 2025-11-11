@@ -1,8 +1,8 @@
 package com.contargo.s3sync.config;
 
 /**
- * Configures the AWS SDK S3 client used by the application.
- * Supports optional endpoint override and path-style access for local stacks.
+ * Configures the AWS SDK S3 client used by the application. Supports optional
+ * endpoint override and path-style access for local stacks.
  */
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,23 +29,27 @@ public class S3ClientConfiguration {
      * Builds and configures a reusable {@link S3Client}.
      */
     public S3Client s3Client() {
-        S3ClientBuilder builder = S3Client.builder()
-            .region(Region.of(properties.getRegion()));
+        S3ClientBuilder builder = createBuilder()
+                .region(Region.of(properties.getRegion()));
 
         if (properties.isForcePathStyle()) {
             builder = builder.serviceConfiguration(S3Configuration.builder()
-                .pathStyleAccessEnabled(true)
-                .build());
+                    .pathStyleAccessEnabled(true)
+                    .build());
         }
 
         if (properties.getEndpoint() != null && !properties.getEndpoint().isBlank()) {
             builder = builder.endpointOverride(java.net.URI.create(properties.getEndpoint()))
-                .credentialsProvider(localStackCredentials());
+                    .credentialsProvider(localStackCredentials());
         } else {
             builder = builder.credentialsProvider(DefaultCredentialsProvider.create());
         }
 
         return builder.build();
+    }
+
+    S3ClientBuilder createBuilder() {
+        return S3Client.builder();
     }
 
     /**
@@ -55,4 +59,3 @@ public class S3ClientConfiguration {
         return StaticCredentialsProvider.create(AwsBasicCredentials.create("test", "test"));
     }
 }
-
