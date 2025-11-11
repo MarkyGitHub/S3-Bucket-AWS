@@ -1,5 +1,8 @@
 package com.contargo.s3sync.order;
 
+/**
+ * JPA entity representing an order with auditing timestamps.
+ */
 import com.contargo.s3sync.customer.Customer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,6 +37,9 @@ public class Order {
     private Customer customer;
 
     @PrePersist
+    /**
+     * Initializes auditing timestamps on first persist.
+     */
     void onCreate() {
         if (created == null) {
             created = OffsetDateTime.now();
@@ -44,6 +50,9 @@ public class Order {
     }
 
     @PreUpdate
+    /**
+     * Advances the lastChange timestamp on update.
+     */
     void onUpdate() {
         lastChange = OffsetDateTime.now();
     }

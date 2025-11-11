@@ -12,10 +12,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.testcontainers.containers.LocalStackContainer;
+import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 
@@ -27,13 +28,14 @@ class SyncServiceIntegrationTest {
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
-        .withDatabaseName("s3sync")
-        .withUsername("s3sync")
-        .withPassword("s3sync");
+            .withDatabaseName("s3sync")
+            .withUsername("s3sync")
+            .withPassword("s3sync");
 
     @Container
-    static LocalStackContainer localstack = new LocalStackContainer("localstack/localstack:3.4")
-        .withServices(LocalStackContainer.Service.S3);
+    static LocalStackContainer localstack = new LocalStackContainer(
+            DockerImageName.parse("localstack/localstack:3.4"))
+            .withServices(LocalStackContainer.Service.S3);
 
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
@@ -61,10 +63,9 @@ class SyncServiceIntegrationTest {
         assertThat(run.getStatus()).isEqualTo(SyncStatus.SUCCESS);
 
         var response = s3Client.listObjectsV2(ListObjectsV2Request.builder()
-            .bucket(s3Properties.getBucketName())
-            .build());
+                .bucket(s3Properties.getBucketName())
+                .build());
 
         assertThat(response.contents()).isNotEmpty();
     }
 }
-

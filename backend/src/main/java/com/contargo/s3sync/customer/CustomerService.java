@@ -1,5 +1,8 @@
 package com.contargo.s3sync.customer;
 
+/**
+ * Read-only service for retrieving customers.
+ */
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +21,9 @@ public class CustomerService {
         this.customerRepository = customerRepository;
     }
 
+    /**
+     * Returns all customers from the repository.
+     */
     public List<Customer> findAll() {
         log.debug("Fetching all customers from repository");
         List<Customer> customers = customerRepository.findAll();

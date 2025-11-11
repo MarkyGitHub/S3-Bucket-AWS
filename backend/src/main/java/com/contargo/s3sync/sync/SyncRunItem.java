@@ -1,5 +1,9 @@
 package com.contargo.s3sync.sync;
 
+/**
+ * JPA entity representing a single exported batch (file) within a sync run.
+ * Captures table, country partition, object count, and stored S3 key.
+ */
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

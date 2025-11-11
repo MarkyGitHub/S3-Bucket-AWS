@@ -1,5 +1,8 @@
 package com.contargo.s3sync.sync;
 
+/**
+ * JPA entity storing the last successful sync timestamp per logical table.
+ */
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

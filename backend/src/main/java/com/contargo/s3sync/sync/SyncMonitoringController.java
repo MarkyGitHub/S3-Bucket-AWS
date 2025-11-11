@@ -1,5 +1,8 @@
 package com.contargo.s3sync.sync;
 
+/**
+ * Read-only endpoints to inspect recent sync runs and current sync state.
+ */
 import com.contargo.s3sync.sync.api.SyncRunResponse;
 import com.contargo.s3sync.sync.api.SyncStateResponse;
 import java.util.List;
@@ -23,6 +26,9 @@ public class SyncMonitoringController {
     }
 
     @GetMapping("/runs")
+    /**
+     * Returns the most recent sync runs (limited by the provided parameter).
+     */
     public List<SyncRunResponse> listRuns(@RequestParam(name = "limit", defaultValue = "10") int limit) {
         log.info("Fetching last {} sync runs", limit);
         List<SyncRunResponse> responses = monitoringService.findRecentRuns(limit);
@@ -31,6 +37,9 @@ public class SyncMonitoringController {
     }
 
     @GetMapping("/state")
+    /**
+     * Returns the latest known last-successful-sync timestamps per logical table.
+     */
     public List<SyncStateResponse> listStates() {
         log.info("Fetching current sync states");
         List<SyncStateResponse> responses = monitoringService.fetchSyncStates();

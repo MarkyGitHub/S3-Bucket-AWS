@@ -18,3 +18,4 @@ FROM selected_auftraege sa
 CROSS JOIN current_ts ct
 WHERE a.auftragid = sa.auftragid;
 
+

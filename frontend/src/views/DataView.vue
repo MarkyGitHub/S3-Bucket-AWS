@@ -44,37 +44,18 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import dayjs from 'dayjs';
-import { api } from '../services/api';
-
-interface Customer {
-    id: string;
-    firstName: string;
-    lastName: string;
-    country: string;
-    [key: string]: unknown;
-}
-
-interface Order {
-    id: string;
-    articleNumber: string;
-    created?: string | null;
-    lastChange?: string | null;
-    customer?: Partial<Customer> | null;
-    customerId?: string | null;
-    kundeid?: string | null;
-    [key: string]: unknown;
-}
+import { customerService, orderService, type Customer, type OrderSummary } from '../services/api';
 
 interface CountryGroup {
     country: string;
     customers: {
         customer: Customer;
-        orders: Order[];
+        orders: OrderSummary[];
     }[];
 }
 
 const customers = ref<Customer[]>([]);
-const orders = ref<Order[]>([]);
+const orders = ref<OrderSummary[]>([]);
 const isLoading = ref(false);
 const error = ref('');
 
@@ -83,8 +64,8 @@ const refresh = async () => {
         isLoading.value = true;
         error.value = '';
         const [customerResponse, orderResponse] = await Promise.all([
-            api.get<Customer[]>('/api/customers'),
-            api.get<Order[]>('/api/orders')
+            customerService.listCustomers(),
+            orderService.listOrders()
         ]);
         customers.value = customerResponse.data ?? [];
         orders.value = orderResponse.data ?? [];
@@ -100,7 +81,7 @@ const groupedCustomers = computed<CountryGroup[]>(() => {
         return [];
     }
 
-    const ordersByCustomer = new Map<string, Order[]>();
+    const ordersByCustomer = new Map<string, OrderSummary[]>();
 
     orders.value.forEach((order) => {
         const embeddedCustomer = order.customer;

@@ -1,5 +1,8 @@
 package com.contargo.s3sync.order;
 
+/**
+ * Read model and maintenance operations for orders.
+ */
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.slf4j.Logger;
@@ -20,6 +23,9 @@ public class OrderService {
         this.orderRepository = orderRepository;
     }
 
+    /**
+     * Returns summarized order data for display purposes.
+     */
     public List<OrderSummaryDto> findAllSummaries() {
         log.debug("Fetching all orders from repository");
         List<OrderSummaryDto> summaries = orderRepository.findAll(Sort.by(Sort.Direction.DESC, "lastChange")).stream()
@@ -35,6 +41,9 @@ public class OrderService {
     }
 
     @Transactional
+    /**
+     * Sets lastChange to now for the two most recent orders per customer.
+     */
     public OrderUpdateResult updateLastChangeForTopTwoOrdersPerCustomer() {
         OffsetDateTime timestamp = OffsetDateTime.now();
         int updatedRows = orderRepository.updateLastChangeForTopTwoPerCustomer(timestamp);
@@ -45,6 +54,7 @@ public class OrderService {
         return new OrderUpdateResult(updatedRows, timestamp);
     }
 
+    /** Lightweight view of an order. */
     public record OrderSummaryDto(
             String id,
             String articleNumber,
@@ -53,6 +63,7 @@ public class OrderService {
             String customerId) {
     }
 
+    /** Result summary for lastChange update operation. */
     public record OrderUpdateResult(int updatedRows, OffsetDateTime appliedTimestamp) {}
 }
 

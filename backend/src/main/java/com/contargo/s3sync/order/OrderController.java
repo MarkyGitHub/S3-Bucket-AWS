@@ -1,5 +1,8 @@
 package com.contargo.s3sync.order;
 
+/**
+ * Demo endpoints for listing orders and touching their lastChange timestamp.
+ */
 import com.contargo.s3sync.order.OrderService.OrderSummaryDto;
 import com.contargo.s3sync.order.OrderService.OrderUpdateResult;
 import java.time.OffsetDateTime;
@@ -24,12 +27,18 @@ public class OrderController {
     }
 
     @GetMapping
+    /**
+     * Returns a summarized list of orders sorted by lastChange descending.
+     */
     public List<OrderSummaryDto> listOrders() {
         log.info("Received request to list orders");
         return orderService.findAllSummaries();
     }
 
     @PostMapping("/lastchange/touch")
+    /**
+     * Updates lastChange for the two most recent orders per customer.
+     */
     public OrderUpdateResponse touchLastChangeForOrders() {
         log.info("Received request to update lastChange for top two orders per customer");
         OrderUpdateResult result = orderService.updateLastChangeForTopTwoOrdersPerCustomer();

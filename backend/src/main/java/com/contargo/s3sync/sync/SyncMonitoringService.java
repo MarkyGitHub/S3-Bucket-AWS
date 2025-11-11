@@ -1,5 +1,8 @@
 package com.contargo.s3sync.sync;
 
+/**
+ * Prepares read-models for monitoring sync runs and sync state.
+ */
 import com.contargo.s3sync.sync.api.SyncRunItemResponse;
 import com.contargo.s3sync.sync.api.SyncRunResponse;
 import com.contargo.s3sync.sync.api.SyncStateResponse;
@@ -24,6 +27,9 @@ public class SyncMonitoringService {
         this.syncStateRepository = syncStateRepository;
     }
 
+    /**
+     * Returns a limited list of recent {@link SyncRunResponse} objects.
+     */
     public List<SyncRunResponse> findRecentRuns(int limit) {
         log.debug("Fetching up to {} recent sync runs", limit);
         List<SyncRunResponse> responses = syncRunRepository.findTop20ByOrderByStartedAtDesc().stream()
@@ -47,6 +53,9 @@ public class SyncMonitoringService {
         return responses;
     }
 
+    /**
+     * Returns the current last-successful-sync timestamps per table.
+     */
     public List<SyncStateResponse> fetchSyncStates() {
         log.debug("Fetching sync state overview");
         List<SyncStateResponse> responses = syncStateRepository.findAll().stream()

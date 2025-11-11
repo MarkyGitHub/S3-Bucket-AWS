@@ -1,5 +1,10 @@
 package com.contargo.s3sync.sync;
 
+/**
+ * JPA entity representing a single synchronization run. Captures start/finish
+ * timestamps, status, optional error message, and the list of exported item
+ * batches.
+ */
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -79,9 +84,14 @@ public class SyncRun {
         return items;
     }
 
+    /**
+     * Adds an item to this run and ensures the item's back-reference points to
+     * this run.
+     *
+     * @param item the batch item produced during this run
+     */
     public void addItem(SyncRunItem item) {
         item.setRun(this);
         this.items.add(item);
     }
 }
-

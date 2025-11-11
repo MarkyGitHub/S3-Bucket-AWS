@@ -1,5 +1,8 @@
 package com.contargo.s3sync.customer;
 
+/**
+ * JPA entity representing a customer with basic contact and address data.
+ */
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -50,6 +53,9 @@ public class Customer {
     private OffsetDateTime updatedAt;
 
     @PrePersist
+    /**
+     * Initializes audit timestamps when the entity is first persisted.
+     */
     void onCreate() {
         OffsetDateTime now = OffsetDateTime.now();
         this.createdAt = now;
@@ -57,6 +63,9 @@ public class Customer {
     }
 
     @PreUpdate
+    /**
+     * Updates the audit timestamp before each update.
+     */
     void onUpdate() {
         this.updatedAt = OffsetDateTime.now();
     }

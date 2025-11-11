@@ -1,5 +1,8 @@
 package com.contargo.s3sync.sync;
 
+/**
+ * REST endpoint to trigger a sync run on demand.
+ */
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,9 @@ public class SyncController {
     }
 
     @PostMapping("/run")
+    /**
+     * Triggers an asynchronous sync run and returns the accepted {@link SyncRun}.
+     */
     public ResponseEntity<SyncRun> triggerSync() {
         log.info("Received request to trigger sync run");
         SyncRun run = syncService.runSync();

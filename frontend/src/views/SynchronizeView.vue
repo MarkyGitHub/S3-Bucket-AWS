@@ -72,28 +72,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import dayjs from 'dayjs';
-import { api } from '../services/api';
-
-interface SyncState {
-    tableName: string;
-    lastSuccessfulSync: string | null;
-}
-
-interface SyncRunItem {
-    tableName: string;
-    country: string;
-    objectCount: number;
-    s3Key: string;
-}
-
-interface SyncRun {
-    id: number | null;
-    startedAt: string;
-    finishedAt: string | null;
-    status: string;
-    errorMessage: string | null;
-    items: SyncRunItem[];
-}
+import { syncService, type SyncRun, type SyncState } from '../services/api';
 
 const states = ref<SyncState[]>([]);
 const runs = ref<SyncRun[]>([]);
@@ -106,11 +85,11 @@ const refresh = async () => {
         isLoading.value = true;
         error.value = '';
         const [stateResponse, runResponse] = await Promise.all([
-            api.get<SyncState[]>('/api/sync/state'),
-            api.get<SyncRun[]>('/api/sync/runs?limit=10')
+            syncService.listStates(),
+            syncService.listRuns(10)
         ]);
-        states.value = stateResponse.data;
-        runs.value = runResponse.data;
+        states.value = stateResponse.data ?? [];
+        runs.value = runResponse.data ?? [];
     } catch (err) {
         error.value = getErrorMessage(err);
     } finally {
@@ -122,7 +101,7 @@ const triggerSync = async () => {
     try {
         isTriggering.value = true;
         error.value = '';
-        await api.post('/api/sync/run');
+        await syncService.triggerRun();
         await refresh();
     } catch (err) {
         error.value = getErrorMessage(err);

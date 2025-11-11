@@ -22,20 +22,64 @@
                     Current frequency: <strong>{{ summary }}</strong>
                 </p>
                 <div class="form__actions">
-                    <button class="button" type="submit">Save Changes</button>
+                    <button class="button" :disabled="isSaving" type="submit">
+                        <span v-if="!isSaving">Save Changes</span>
+                        <span v-else>Saving…</span>
+                    </button>
                 </div>
                 <p v-if="message" class="form__message">{{ message }}</p>
+                <p v-if="saveError" class="form__message form__message--error">{{ saveError }}</p>
+                <p v-if="loadError" class="form__message form__message--error">{{ loadError }}</p>
             </form>
+        </section>
+
+        <section class="panel">
+            <header class="panel__header">
+                <div>
+                    <h2>Run Update</h2>
+                    <p>Run the update routine to refresh the latest order changes.</p>
+                </div>
+                <button class="button" :disabled="isTouching" @click="touchLastChange">
+                    <span v-if="!isTouching">Run Update Script</span>
+                    <span v-else>Running…</span>
+                </button>
+            </header>
+            <div class="panel__body">
+                <p v-if="statusStore.lastUpdate" class="touch__summary">
+                    Updated <strong>{{ statusStore.lastUpdate.updatedRows }}</strong> rows at
+                    <strong>{{ formatTimestamp(statusStore.lastUpdate.appliedTimestamp) }}</strong>.
+                </p>
+                <p v-if="touchError" class="touch__error">{{ touchError }}</p>
+            </div>
         </section>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import dayjs from 'dayjs';
+import { computed, onMounted, ref, watch } from 'vue';
 
+import {
+    orderService,
+    syncScheduleService,
+    type OrderUpdateResponse,
+    type SyncScheduleRequest,
+    type SyncScheduleResponse
+} from '../services/api';
+import { setLastUpdateStatus, useStatusStore } from '../stores/statusStore';
+
+const statusStore = useStatusStore();
 const hours = ref(3);
 const minutes = ref(0);
+const schedulerEnabled = ref(true);
 const message = ref('');
+const saveError = ref('');
+const loadError = ref('');
+const isSaving = ref(false);
+
+const isTouching = ref(false);
+const touchSummary = ref<OrderUpdateResponse | null>(null);
+const touchError = ref('');
 
 watch(hours, (value) => {
     if (value < 0 || Number.isNaN(value)) {
@@ -56,6 +100,10 @@ watch(minutes, (value) => {
 });
 
 const summary = computed(() => {
+    if (!schedulerEnabled.value) {
+        return 'disabled';
+    }
+
     const parts: string[] = [];
     if (hours.value > 0) {
         parts.push(`${hours.value} ${hours.value === 1 ? 'hour' : 'hours'}`);
@@ -69,11 +117,84 @@ const summary = computed(() => {
     return parts.join(' and ');
 });
 
-const save = () => {
-    message.value = `Synchronization frequency updated to ${summary.value}.`;
-    setTimeout(() => {
-        message.value = '';
-    }, 4000);
+const formatTimestamp = (value: string) => {
+    return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
+};
+
+const getErrorMessage = (err: unknown) => {
+    if (typeof err === 'string') return err;
+    if (err && typeof err === 'object' && 'response' in err) {
+        const rsp = err as { response?: { data?: { message?: string }; statusText?: string } };
+        return rsp.response?.data?.message ?? rsp.response?.statusText ?? 'Request failed';
+    }
+    return 'Unexpected error occurred';
+};
+
+const loadSchedule = async () => {
+    try {
+        const response = await syncScheduleService.getSchedule();
+        const data = response.data;
+        schedulerEnabled.value = data.schedulerEnabled;
+        hours.value = data.hours;
+        minutes.value = data.minutes;
+        loadError.value = '';
+    } catch (err) {
+        loadError.value = getErrorMessage(err);
+    }
+};
+
+onMounted(() => {
+    void loadSchedule();
+});
+
+const save = async () => {
+    saveError.value = '';
+    message.value = '';
+
+    if (hours.value === 0 && minutes.value === 0) {
+        saveError.value = 'Interval must be greater than zero.';
+        return;
+    }
+
+    try {
+        isSaving.value = true;
+        const payload: SyncScheduleRequest = {
+            hours: hours.value,
+            minutes: minutes.value
+        };
+        const response = await syncScheduleService.updateSchedule(payload);
+        const data = response.data;
+        schedulerEnabled.value = data.schedulerEnabled;
+        hours.value = data.hours;
+        minutes.value = data.minutes;
+        message.value = `Synchronization frequency updated to ${summary.value}.`;
+        setTimeout(() => {
+            message.value = '';
+        }, 4000);
+    } catch (err) {
+        saveError.value = getErrorMessage(err);
+    } finally {
+        isSaving.value = false;
+    }
+};
+
+const touchLastChange = async () => {
+    try {
+        isTouching.value = true;
+        touchError.value = '';
+        const response = await orderService.touchLastChange();
+        touchSummary.value = response.data;
+        setLastUpdateStatus({
+            updatedRows: response.data.updatedRows,
+            appliedTimestamp: response.data.appliedTimestamp
+        });
+    } catch (err) {
+        touchSummary.value = null;
+        touchError.value = getErrorMessage(err);
+        setLastUpdateStatus(null);
+    } finally {
+        isTouching.value = false;
+    }
 };
 </script>
 
@@ -88,10 +209,21 @@ const save = () => {
     padding: 1.5rem;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    display: grid;
+    gap: 1.25rem;
 }
 
 .panel__header {
-    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.panel__body {
+    display: grid;
+    gap: 0.75rem;
+    color: #475569;
 }
 
 .form {
@@ -143,9 +275,30 @@ const save = () => {
     font-weight: 600;
 }
 
+.button[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .form__message {
     margin: 0;
     color: #047857;
+    font-weight: 600;
+}
+
+.form__message--error {
+    color: #b91c1c;
+}
+
+.touch__summary {
+    margin: 0;
+    color: #047857;
+    font-weight: 600;
+}
+
+.touch__error {
+    margin: 0;
+    color: #b91c1c;
     font-weight: 600;
 }
 </style>

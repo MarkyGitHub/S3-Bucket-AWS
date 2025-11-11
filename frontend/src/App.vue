@@ -19,9 +19,11 @@
 import { RouterLink, RouterView } from 'vue-router';
 
 const menuItems = [
-  { to: '/', label: 'Synchronize' },
+  { to: '/sync', label: 'Synchronize' },
+  { to: '/s3', label: 'AWS Connect' },
   { to: '/data', label: 'Data View' },
   { to: '/settings', label: 'Settings' }
+
 ];
 </script>
 
@@ -35,7 +37,7 @@ const menuItems = [
 
 .sidebar {
   padding: 2rem 1.5rem;
-  background: #0f172a;
+  background: #00325a;
   color: #e2e8f0;
   display: flex;
   flex-direction: column;
