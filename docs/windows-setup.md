@@ -44,7 +44,7 @@ cd backend
 
 The first run downloads Gradle, dependencies, and a JDK toolchain. The API listens on `http://localhost:8080` with the LocalStack and PostgreSQL settings defined in `application.yml`.
 
-### Environment Overrides
+### Environment Overrides (Optional)
 
 Set these before starting the app if you need custom endpoints:
 

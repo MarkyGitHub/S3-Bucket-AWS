@@ -38,11 +38,35 @@ Key endpoints:
 - `GET /api/sync/runs` — recent sync runs with per-country uploads
 - `GET /api/customers`, `GET /api/orders` — raw table reads for debugging
 
-Environment variables of interest:
+#### Configuration
 
-- `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`
-- `AWS_S3_ENDPOINT` (override `aws.s3.endpoint`), `AWS_S3_BUCKET_NAME`, `AWS_S3_REGION`
-- `SYNC_SCHEDULE_CRON` (override `sync.schedule-cron`), `SYNC_SCHEDULER_ENABLED`
+Default configuration is in `backend/src/main/resources/application.yml`. 
+
+#### Environment Overrides (Optional)
+
+You can override these values using environment variables following Spring Boot's convention (uppercase, dots replaced with underscores):
+
+```powershell
+# Database
+$env:SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5432/s3sync"
+$env:SPRING_DATASOURCE_USERNAME = "postgres"
+$env:SPRING_DATASOURCE_PASSWORD = "password"
+
+# S3 / LocalStack
+$env:AWS_S3_ENDPOINT = "http://localhost:4566"  # overrides aws.s3.endpoint
+$env:AWS_S3_BUCKET_NAME = "s3-sync-poc"         # overrides aws.s3.bucket-name
+$env:AWS_S3_REGION = "eu-central-1"             # overrides aws.s3.region
+$env:AWS_S3_FORCE_PATH_STYLE = "true"           # overrides aws.s3.force-path-style
+
+# Sync scheduling
+$env:SYNC_SCHEDULE_INTERVAL = "3h"              # overrides sync.schedule-interval
+$env:SYNC_SCHEDULER_ENABLED = "true"            # overrides sync.scheduler-enabled
+
+# Then start the backend
+./gradlew bootRun
+```
+
+**Note**: Spring Boot does not use `.env` files by default. Set environment variables in your shell or IDE run configuration before starting the application.
 
 ### 3. Frontend
 

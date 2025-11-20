@@ -227,9 +227,9 @@ section.panel .panel__header::after {
 }
 
 .button--ghost {
-    background: transparent;
-    border: 1px solid #cbd5f5;
-    color: #1f2937;
+    background: #1dab35;
+        border: 1px solid #23ae6d;
+        color: hsl(120, 9%, 96%);
 }
 
 .table {

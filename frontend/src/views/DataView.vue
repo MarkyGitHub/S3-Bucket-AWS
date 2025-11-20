@@ -193,10 +193,10 @@ onMounted(refresh);
 }
 
 .button {
-    border: 1px solid #cbd5f5;
-    background: transparent;
-    color: #1f2937;
-    padding: 0.6rem 1.2rem;
+border: none;
+    background: #2563eb;
+    color: white;
+    padding: 0.6rem 1.1rem;
     border-radius: 8px;
     font-weight: 600;
 }
