@@ -16,6 +16,11 @@
                     </button>
                 </div>
             </header>
+            <transition name="fade">
+                <div v-if="showRefreshAlert" class="alert alert--success">
+                    <span>✓ Data refreshed successfully</span>
+                </div>
+            </transition>
             <table class="table" v-if="states.length">
                 <thead>
                     <tr>
@@ -33,13 +38,13 @@
             <p v-else class="empty">No sync has run yet.</p>
         </section>
 
-        <section class="panel">
-            <header class="panel__header">
+        <details class="panel" open>
+            <summary class="panel__header">
                 <div>
                     <h2>Recent Sync Runs</h2>
                     <p>Includes uploaded CSVs grouped by country.</p>
                 </div>
-            </header>
+            </summary>
             <ul class="run-list" v-if="runs.length">
                 <li v-for="run in runs" :key="run.id ?? run.startedAt" class="run-card">
                     <div class="run-card__header">
@@ -63,7 +68,7 @@
                 </li>
             </ul>
             <p v-else class="empty">No runs found.</p>
-        </section>
+        </details>
 
         <p v-if="error" class="error">{{ error }}</p>
     </div>
@@ -79,6 +84,7 @@ const runs = ref<SyncRun[]>([]);
 const isLoading = ref(false);
 const isTriggering = ref(false);
 const error = ref('');
+const showRefreshAlert = ref(false);
 
 const refresh = async () => {
     try {
@@ -90,6 +96,12 @@ const refresh = async () => {
         ]);
         states.value = stateResponse.data ?? [];
         runs.value = runResponse.data ?? [];
+
+        // Show success alert
+        showRefreshAlert.value = true;
+        setTimeout(() => {
+            showRefreshAlert.value = false;
+        }, 3000);
     } catch (err) {
         error.value = getErrorMessage(err);
     } finally {
@@ -151,6 +163,10 @@ onMounted(refresh);
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
 
+.panel[open] {
+    padding-bottom: 1.5rem;
+}
+
 .panel__header {
     display: flex;
     justify-content: space-between;
@@ -158,6 +174,37 @@ onMounted(refresh);
     flex-wrap: wrap;
     gap: 1rem;
     margin-bottom: 1rem;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+.panel__header::-webkit-details-marker {
+    display: none;
+}
+
+.panel__header::marker {
+    display: none;
+}
+
+details.panel .panel__header::after {
+    content: '▼';
+    font-size: 0.75rem;
+    color: #64748b;
+    transition: transform 0.2s ease;
+    margin-left: 1rem;
+}
+
+details.panel[open] .panel__header::after {
+    transform: rotate(180deg);
+}
+
+section.panel .panel__header {
+    cursor: default;
+}
+
+section.panel .panel__header::after {
+    display: none;
 }
 
 .actions {
@@ -303,6 +350,31 @@ onMounted(refresh);
     font-weight: 600;
 }
 
+.alert {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
+
+.alert--success {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
 @media (max-width: 768px) {
     .run-card__item {
         flex-direction: column;

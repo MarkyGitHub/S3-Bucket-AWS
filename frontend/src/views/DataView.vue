@@ -3,34 +3,44 @@
         <section class="panel">
             <header class="panel__header">
                 <div>
-                    <h2>Kunden &amp; Aufträge</h2>
-                    <p>Aufträge pro Kunde, gruppiert nach Land. Neueste Änderungen zuerst.</p>
+                    <h2>Customers and Orders</h2>
+                    <p>Orders per customer, grouped by country. Most recent changes first.</p>
                 </div>
                 <button class="button button--ghost" :disabled="isLoading" @click="refresh">
-                    Aktualisieren
+                    Refresh
                 </button>
             </header>
+            <transition name="fade">
+                <div v-if="showRefreshAlert" class="alert alert--success">
+                    <span>✓ Data refreshed successfully</span>
+                </div>
+            </transition>
             <div v-if="groupedCustomers.length" class="country-groups">
                 <div v-for="group in groupedCustomers" :key="group.country" class="country-group">
                     <h3 class="country-group__title">{{ group.country }}</h3>
                     <ul class="customer-list">
                         <li v-for="entry in group.customers" :key="entry.customer.id" class="customer-card">
-                            <div class="customer-card__header">
-                                <p class="customer-card__name">
-                                    {{ entry.customer.lastName }}, {{ entry.customer.firstName }}
-                                </p>
-                                <span class="customer-card__id">ID: {{ entry.customer.id }}</span>
-                            </div>
-                            <ul v-if="entry.orders.length" class="order-list">
-                                <li v-for="order in entry.orders" :key="order.id" class="order-list__item">
-                                    <div class="order-list__item-main">
-                                        <p class="order-list__title">Auftrag {{ order.id }}</p>
-                                        <p class="order-list__subtitle">Artikel {{ order.articleNumber }}</p>
+                            <details class="customer-details">
+                                <summary class="customer-card__header">
+                                    <div class="customer-card__info">
+                                        <p class="customer-card__name">
+                                            {{ entry.customer.lastName }}, {{ entry.customer.firstName }}
+                                        </p>
+                                        <span class="customer-card__id">ID: {{ entry.customer.id }}</span>
                                     </div>
-                                    <time class="order-list__timestamp">{{ formatDate(order.lastChange) }}</time>
-                                </li>
-                            </ul>
-                            <p v-else class="order-list__empty">Keine Aufträge vorhanden.</p>
+                                    <span class="customer-card__count">{{ entry.orders.length }} Orders</span>
+                                </summary>
+                                <ul v-if="entry.orders.length" class="order-list">
+                                    <li v-for="order in entry.orders" :key="order.id" class="order-list__item">
+                                        <div class="order-list__item-main">
+                                            <p class="order-list__title">order-lg1 {{ order.id }}</p>
+                                            <p class="order-list__subtitle">Article {{ order.articleNumber }}</p>
+                                        </div>
+                                        <time class="order-list__timestamp">{{ formatDate(order.lastChange) }}</time>
+                                    </li>
+                                </ul>
+                                <p v-else class="order-list__empty">No orders available.</p>
+                            </details>
                         </li>
                     </ul>
                 </div>
@@ -58,6 +68,7 @@ const customers = ref<Customer[]>([]);
 const orders = ref<OrderSummary[]>([]);
 const isLoading = ref(false);
 const error = ref('');
+const showRefreshAlert = ref(false);
 
 const refresh = async () => {
     try {
@@ -69,6 +80,12 @@ const refresh = async () => {
         ]);
         customers.value = customerResponse.data ?? [];
         orders.value = orderResponse.data ?? [];
+
+        // Show success alert
+        showRefreshAlert.value = true;
+        setTimeout(() => {
+            showRefreshAlert.value = false;
+        }, 3000);
     } catch (err) {
         error.value = getErrorMessage(err);
     } finally {
@@ -212,18 +229,53 @@ onMounted(refresh);
 .customer-card {
     border: 1px solid #e2e8f0;
     border-radius: 10px;
-    padding: 1rem 1.25rem;
     background: #f8fafc;
-    display: grid;
-    gap: 0.75rem;
+}
+
+.customer-details {
+    padding: 1rem 1.25rem;
+}
+
+.customer-details[open] {
+    padding-bottom: 0.5rem;
 }
 
 .customer-card__header {
     display: flex;
-    flex-wrap: wrap;
     justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+.customer-card__header::-webkit-details-marker {
+    display: none;
+}
+
+.customer-card__header::marker {
+    display: none;
+}
+
+.customer-card__header::after {
+    content: '▼';
+    font-size: 0.75rem;
+    color: #64748b;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.customer-details[open] .customer-card__header::after {
+    transform: rotate(180deg);
+}
+
+.customer-card__info {
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
     align-items: baseline;
+    flex: 1;
 }
 
 .customer-card__name {
@@ -237,9 +289,16 @@ onMounted(refresh);
     color: #475569;
 }
 
+.customer-card__count {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
 .order-list {
     list-style: none;
-    margin: 0;
+    margin: 0.75rem 0 0.5rem 0;
     padding: 0;
     display: grid;
     gap: 0.65rem;
@@ -294,6 +353,31 @@ onMounted(refresh);
     margin-top: 1rem;
 }
 
+.alert {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
+
+.alert--success {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
 @media (max-width: 768px) {
     .order-list__item {
         flex-direction: column;

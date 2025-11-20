@@ -12,15 +12,21 @@
         </button>
       </header>
 
+      <transition name="fade">
+        <div v-if="showRefreshAlert" class="alert alert--success">
+          <span>✓ Data refreshed successfully</span>
+        </div>
+      </transition>
+
       <div v-if="isLoading" class="status">Loading S3 objects…</div>
       <p v-else-if="error" class="error">{{ error }}</p>
       <div v-else-if="!files.length" class="status">No objects found in the bucket.</div>
       <div v-else class="sections">
-        <section class="subsection">
-          <header class="subsection__header">
+        <details class="subsection" open>
+          <summary class="subsection__header">
             <h3>Kunden</h3>
             <span class="badge">{{ customerFiles.length }}</span>
-          </header>
+          </summary>
           <p v-if="!customerFiles.length" class="status">Keine Kunden-Dateien gefunden.</p>
           <table v-else class="table">
             <thead>
@@ -42,13 +48,13 @@
               </tr>
             </tbody>
           </table>
-        </section>
+        </details>
 
-        <section class="subsection">
-          <header class="subsection__header">
+        <details class="subsection" open>
+          <summary class="subsection__header">
             <h3>Aufträge</h3>
             <span class="badge">{{ orderFiles.length }}</span>
-          </header>
+          </summary>
           <p v-if="!orderFiles.length" class="status">Keine Aufträge gefunden.</p>
           <table v-else class="table">
             <thead>
@@ -70,13 +76,13 @@
               </tr>
             </tbody>
           </table>
-        </section>
+        </details>
 
-        <section v-if="otherFiles.length" class="subsection">
-          <header class="subsection__header">
+        <details v-if="otherFiles.length" class="subsection" open>
+          <summary class="subsection__header">
             <h3>Weitere Dateien</h3>
             <span class="badge">{{ otherFiles.length }}</span>
-          </header>
+          </summary>
           <table class="table">
             <thead>
               <tr>
@@ -97,7 +103,7 @@
               </tr>
             </tbody>
           </table>
-        </section>
+        </details>
       </div>
     </section>
   </div>
@@ -112,6 +118,7 @@ import { s3Service, type S3ObjectMetadata } from '../services/api';
 const files = ref<S3ObjectMetadata[]>([]);
 const isLoading = ref(false);
 const error = ref('');
+const showRefreshAlert = ref(false);
 
 const orderFiles = computed(() =>
   files.value.filter((file) => file.key.startsWith('auftraege/'))
@@ -131,6 +138,12 @@ const loadFiles = async () => {
     error.value = '';
     const response = await s3Service.listFiles();
     files.value = response.data;
+
+    // Show success alert
+    showRefreshAlert.value = true;
+    setTimeout(() => {
+      showRefreshAlert.value = false;
+    }, 3000);
   } catch (err) {
     error.value = getErrorMessage(err);
   } finally {
@@ -229,6 +242,10 @@ onMounted(loadFiles);
 .subsection {
   display: grid;
   gap: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+  background: #f9fafb;
 }
 
 .subsection__header {
@@ -236,6 +253,30 @@ onMounted(loadFiles);
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  margin-bottom: 0.5rem;
+}
+
+.subsection__header::-webkit-details-marker {
+  display: none;
+}
+
+.subsection__header::marker {
+  display: none;
+}
+
+.subsection__header::after {
+  content: '▼';
+  font-size: 0.75rem;
+  color: #64748b;
+  transition: transform 0.2s ease;
+  margin-left: auto;
+}
+
+.subsection[open] .subsection__header::after {
+  transform: rotate(180deg);
 }
 
 .badge {
@@ -293,5 +334,30 @@ onMounted(loadFiles);
 .button[disabled] {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.alert--success {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
